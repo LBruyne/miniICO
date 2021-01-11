@@ -1,16 +1,16 @@
 import React, {Component} from "react";
 import {Button, Form, Input, List, Modal} from "antd";
+import CardAllCampaign from "../../../components/card/card-all-campaign";
 
 import web3 from "../../../utils/web3";
 import contract from "../../../utils/contracts";
-import CardMyCampaign from "../../../components/card/card-my-campaign";
 
-class MyCampaignTab extends Component {
+class AllCampaignTab extends Component {
 
     state ={
-        myCampaigns: [],
-        myUses: [],
-        myCampaignsNum: 0,
+        Campaigns: [],
+        Uses: [],
+        CampaignsNum: 0,
         isConnected: false,
         address: ""
     }
@@ -30,7 +30,6 @@ class MyCampaignTab extends Component {
             let numCampaigns = await contract.methods.numCampaigns().call();
             let campaigns = [];
             let uses = [];
-            let num = 0;
             for(let i = 0; i < numCampaigns; i++) {
                 const campaign = await contract.methods.campaigns(i).call();
                 this.formatCampaign(campaign, i)
@@ -38,18 +37,14 @@ class MyCampaignTab extends Component {
                 this.formatUse(use, i)
                 console.log(campaign)
                 console.log(use)
-                if(campaign.manager == this.state.address) {
-                    uses.push(use);
-                    campaigns.push(campaign);
-                    num++;
-                }
+                uses.push(use);
+                campaigns.push(campaign);
             }
             this.setState({
-                myCampaigns: campaigns,
-                myCampaignsNum: num,
-                myUses: uses
+                Campaigns: campaigns,
+                Uses: uses,
+                CampaignsNum: numCampaigns
             })
-            console.log(this.state.myCampaignsNum);
         }
     }
 
@@ -87,10 +82,10 @@ class MyCampaignTab extends Component {
             <div>
                 <List
                     itemLayout="horizontal"
-                    dataSource={this.state.myCampaigns}
+                    dataSource={this.state.Campaigns}
                     renderItem={(item, index) => (
                         <List.Item>
-                            <CardMyCampaign campaign={item} use={this.state.myUses[index]}/>
+                            <CardAllCampaign campaign={item} use={this.state.Uses[index]}/>
                         </List.Item>
                     )}
                 />
@@ -99,4 +94,4 @@ class MyCampaignTab extends Component {
     }
 }
 
-export default MyCampaignTab;
+export default AllCampaignTab;

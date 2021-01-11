@@ -3,14 +3,13 @@ import {Button, Form, Input, List, Modal} from "antd";
 
 import web3 from "../../../utils/web3";
 import contract from "../../../utils/contracts";
-import CardMyCampaign from "../../../components/card/card-my-campaign";
+import CardMyInvolved from "../../../components/card/card-my-involved";
 
-class MyCampaignTab extends Component {
+class InvolvedCampaignTab extends Component {
 
     state ={
-        myCampaigns: [],
-        myUses: [],
-        myCampaignsNum: 0,
+        involvedCampaigns: [],
+        involvedUses: [],
         isConnected: false,
         address: ""
     }
@@ -27,10 +26,10 @@ class MyCampaignTab extends Component {
                 isConnected: true,
                 address: accounts[0]
             })
+
             let numCampaigns = await contract.methods.numCampaigns().call();
             let campaigns = [];
             let uses = [];
-            let num = 0;
             for(let i = 0; i < numCampaigns; i++) {
                 const campaign = await contract.methods.campaigns(i).call();
                 this.formatCampaign(campaign, i)
@@ -38,18 +37,27 @@ class MyCampaignTab extends Component {
                 this.formatUse(use, i)
                 console.log(campaign)
                 console.log(use)
-                if(campaign.manager == this.state.address) {
+
+                // 查看该用户是否参与了当前项目
+                let isInvolved = false;
+                /* TODO
+                for (let i = 0; i < campaign.numFunders; i++) {
+                    if (campaign.funders[i].addr == this.state.address) {
+                        isInvolved = true;
+                        break;
+                    }
+                }
+                */
+                // @ts-ignore
+                if(isInvolved == true) {
                     uses.push(use);
                     campaigns.push(campaign);
-                    num++;
                 }
             }
             this.setState({
-                myCampaigns: campaigns,
-                myCampaignsNum: num,
-                myUses: uses
+                involvedCampaigns: campaigns,
+                involvedUses: uses
             })
-            console.log(this.state.myCampaignsNum);
         }
     }
 
@@ -87,10 +95,10 @@ class MyCampaignTab extends Component {
             <div>
                 <List
                     itemLayout="horizontal"
-                    dataSource={this.state.myCampaigns}
+                    dataSource={this.state.involvedCampaigns}
                     renderItem={(item, index) => (
                         <List.Item>
-                            <CardMyCampaign campaign={item} use={this.state.myUses[index]}/>
+                            <CardMyInvolved campaign={item} use={this.state.involvedUses[index]}/>
                         </List.Item>
                     )}
                 />
@@ -99,4 +107,4 @@ class MyCampaignTab extends Component {
     }
 }
 
-export default MyCampaignTab;
+export default InvolvedCampaignTab;

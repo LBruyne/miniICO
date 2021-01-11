@@ -6,7 +6,7 @@ contract Funding {
     // 参与者
     struct Funder {
         // 构造函数填充
-        address payable addr;                       // 投资人的地址
+        address payable addr;               // 投资人的地址
         uint    amount;                     // 出资数额
     }
 
@@ -16,7 +16,7 @@ contract Funding {
         uint   amount;                      // 请求使用的金额
         uint   agreeAmount;                 // 同意的钱，以太坊不太好进行浮点数计算，所以用整形进行表示
         uint   numVote;                     // 投票数量
-        bool   isSuccessful;                // 使用请求是否成功
+        bool   isSuccessful;                // 该项目是否成功完成
         mapping (uint => uint) agree;       // 从用户序号到是否同意的状态映射
         // 0 没投过票
         // 1 投票同意
@@ -54,11 +54,11 @@ contract Funding {
         campaigns[campaignID] = Campaign({projectName: name,
         projectDescription: desc,
         manager: manager,
-        targetMoney: target,
+        targetMoney: target * 1 ether,
         durTime: dur,
         startTime: now,
         endTime: now + dur * 1 days,
-        collectedMoney: 0,
+        collectedMoney: 0 * 1 ether,
         numFunders: 0,
         isUsed: false,
         isSuccessful: false
@@ -103,7 +103,7 @@ contract Funding {
         Use storage u = uses[campaignID];
         // 设置use的信息
         u.useDescription = desc;
-        u.amount = amount;
+        u.amount = amount * 1 ether;
     }
 
     function agreeUse(uint campaignID, bool agree) public {
@@ -112,7 +112,7 @@ contract Funding {
         require(campaignID < numCampaigns && campaignID >= 0);
         require(c.isSuccessful == true && c.isUsed == false && u.isSuccessful == false);
 
-        for(uint i = 0; i <= c.numFunders; i++) {
+        for(uint i = 0; i < c.numFunders; i++) {
             // 该用户参与了出资
             if(msg.sender == c.funders[i].addr) {
                 require(u.agree[i] == 0);
@@ -126,20 +126,20 @@ contract Funding {
                     else {
                         u.agree[i] = 2;
                     }
+
+                    // 检查此时是否过半
+                    if(u.agreeAmount >= c.collectedMoney / 2) {
+                        u.isSuccessful = true;
+                        // 使用成功，给经理人打钱
+                        c.manager.transfer(u.amount);
+                        c.isUsed = true;
+                    }
+
                     // 检查此时是不是投票完成
                     if(++u.numVote == c.numFunders) {
                         c.isUsed = true;
-                        if(u.agreeAmount >= c.collectedMoney / 2) {
-                            u.isSuccessful = true;
-                            // 使用成功，给经理人打钱
-                            c.manager.transfer(u.amount);
-                            c.isUsed = true;
-                        }
-                        else {
-                            u.isSuccessful = false;
-                            // 退款，用户上交的钱都退回去
-                            // TODO
-                        }
+                        // 项目失败
+                        u.isSuccessful = false;
                     }
                 }
             }
@@ -159,11 +159,39 @@ contract Funding {
     }
 
     // 获取筹集到的金额
-    function getAmount(uint campaignID) public view returns(uint) {
-        Campaign memory c = campaigns[campaignID];
+    function getAmount(uint campaignID) public view returns (uint) {
+        Campaign storage c = campaigns[campaignID];
         return c.collectedMoney;
     }
 
+    // 检查一个用户是否在一个项目的支持者名单中
+    function checkIsFunder(uint campaignID, address uaddr) public view returns (bool) {
+        Campaign storage c = campaigns[campaignID];
+        bool ret = false;
+        for(uint i = 0; i < c.numFunders; i++) {
+            if(c.funders[i].addr == uaddr) {
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    // 检查一个用户是否对一个项目投票
+    function checkIsVoted(uint campaignID, address uaddr) public view returns (bool) {
+        Use storage u = uses[campaignID];
+        Campaign storage c = campaigns[campaignID];
+        bool ret = false;
+        for(uint i = 0; i < c.numFunders; i++) {
+            if(c.funders[i].addr == uaddr) {
+                if(u.agree[i] != 0) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
 
     /* 获取所有参与者
     function getInvestors(uint campaignID) public returns(address[] memory) {
