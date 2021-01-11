@@ -30,8 +30,10 @@ contract Funding {
         string projectDescription;          // 项目描述
         address payable manager;            // 发起者
         uint targetMoney;                   // 目标筹集金额
-        uint endTime;                       // 项目结束时间，单位秒
+        uint durTime;                       // 项目结束时间，单位天
 
+        uint startTime;                     // 项目开始时间
+        uint endTime;                       // 项目结束时间
         uint collectedMoney;                // 收集到的金额
         uint numFunders;                    // 参与成员的数量
         bool isUsed;                        // 是否被使用过
@@ -44,16 +46,18 @@ contract Funding {
     mapping (uint => Campaign) public campaigns;   // 众筹项目的信息
     mapping (uint => Use) public uses;             // 因为结构体内嵌不能成功编译，所以将Use单独拿出来
 
-    function newCampaign(string memory name, string memory desc, address payable manager, uint target, uint endTime) public
+    function newCampaign(string memory name, string memory desc, address payable manager, uint target, uint dur) public
     returns (uint) {
-        require(endTime > block.timestamp);
+        require(dur > 0);
         // campaignID 作为一个变量返回
         uint campaignID = numCampaigns++;
         campaigns[campaignID] = Campaign({projectName: name,
         projectDescription: desc,
         manager: manager,
         targetMoney: target,
-        endTime: endTime,
+        durTime: dur,
+        startTime: now,
+        endTime: now + dur * 1 days,
         collectedMoney: 0,
         numFunders: 0,
         isUsed: false,
@@ -69,7 +73,7 @@ contract Funding {
         // 贡献的钱必须大于0，而且不能超过差额
         require(msg.value > 0 && msg.value <= campaigns[campaignID].targetMoney - campaigns[campaignID].collectedMoney);
         // 时间上必须还没结束
-        require(campaigns[campaignID].endTime > block.timestamp);
+        require(campaigns[campaignID].endTime > now);
         // 必须还没有收集成功，这一条和第一条基本上是绑定了的
         require(campaigns[campaignID].isSuccessful == false);
 

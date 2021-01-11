@@ -21,7 +21,7 @@ const { Route, Switch, Redirect } = require('react-router');
  */
 
 const AppRouter = () => (
-    <div>
+    <div >
         <Switch>
             <Route path="/" exact render={() => <Redirect to="/home" />}/>
             <Route exact path="/home" component={HomePage}/>

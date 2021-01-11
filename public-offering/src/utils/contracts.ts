@@ -2,7 +2,7 @@ import Funding from './Funding.json'
 import web3 from './web3'
 
 // 修改地址为合约所在区块内的地址
-var contractAddr = "0x3637f5D183D481149a5445C508aEB51e3dea7FbA"
+var contractAddr = "0x73cF6a72d9F052b38dE6611240E151D8e2a11ebE"
 const FundingABI = Funding.abi
 
 // 获取合约实例

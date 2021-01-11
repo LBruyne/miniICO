@@ -5,6 +5,7 @@ import logo from '../../assets/header/logo.png'
 import './header.css'
 
 import web3 from '../../utils/web3'
+import contract from "../../utils/contracts";
 
 const { Title } = Typography;
 
@@ -26,13 +27,13 @@ class WebHeader extends React.Component {
             })
         }
         else {
-            this.setState({
+            await this.setState({
                 isConnected: true,
                 account: accounts[0]
             })
         }
+        console.log(contract)
     }
-
 
     render() {
         return (
