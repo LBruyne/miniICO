@@ -26,7 +26,10 @@ class CardMyCampaign extends Component<IProps> {
         modalVisible: false,
         tabInUse: 1,
         isConnected: false,
-        address: ""
+        address: "",
+        buttonDisable: false,
+        tagColor: "blue",
+        campaignState: "进行中"
     }
 
     async componentDidMount() {
@@ -40,6 +43,42 @@ class CardMyCampaign extends Component<IProps> {
             await this.setState({
                 isConnected: true,
                 address: accounts[0]
+            })
+
+            let campaign = this.props.campaign;
+            if(campaign.state == 1 || campaign.overTime == true) {
+                this.setState({
+                    campaignState: "项目失败",
+                    tagColor:"red"
+                })
+            }
+            else if(campaign.state == 2) {
+                this.setState({
+                    campaignState: "项目完成",
+                    tagColor:"green"
+                })
+            }
+            else {
+                this.setState({
+                    campaignState: "进行中",
+                    tagColor:"blue"
+                })
+            }
+
+            this.canUse()
+        }
+    }
+
+    canUse = () => {
+        // 没设置用途过
+        if(this.props.campaign.state == 3) {
+            this.setState({
+                buttonDisable: false
+            })
+        }
+        else {
+            this.setState({
+                buttonDisable: true
             })
         }
     }
@@ -105,39 +144,14 @@ class CardMyCampaign extends Component<IProps> {
     }
 
     render() {
-        let campaign = this.props.campaign;
-        let campaignState;
-        let tagColor;
-
-        if(campaign.state == 1 || campaign.overTime == true) {
-            campaignState = "Failed";
-            tagColor = "red";
-        }
-        else if(campaign.state == 2) {
-            campaignState = "Completed";
-            tagColor = "green";
-        }
-        else {
-            campaignState = "进行中";
-            tagColor = "blue";
-        }
-
-        let canUse = () => {
-            // 没设置用途过
-            if(campaign.state == 3)
-                return true;
-            else
-                return false;
-        }
-
         return (
                 <div style={{boxShadow: "2px 2px 1px 2px #888", margin: "5px"}}>
                     <PageHeader
                         className="site-page-header-responsive"
-                        title={campaign.projectName}
-                        tags={<Tag color={tagColor}>{campaignState}</Tag>}
+                        title={this.props.campaign.projectName}
+                        tags={<Tag color={this.state.tagColor}>{this.state.campaignState}</Tag>}
                         extra={[
-                            <Button key="1" type="primary" disabled={!canUse()} onClick={() =>
+                            <Button key="1" type="primary" disabled={this.state.buttonDisable} onClick={() =>
                                 this.setState({
                                     modalVisible: true
                                 })
@@ -148,7 +162,7 @@ class CardMyCampaign extends Component<IProps> {
                         footer={
                             <Tabs defaultActiveKey="1" onChange={this.onTabChange}>
                                 <TabPane tab="募集" key="1" />
-                                <TabPane tab="使用" disabled={!(campaign.state == 2 || campaign.state == 4)} key="2" />
+                                <TabPane tab="使用" disabled={!(this.props.campaign.state == 2 || this.props.campaign.state == 4)} key="2" />
                             </Tabs>
                         }
                     >
@@ -190,7 +204,7 @@ class CardMyCampaign extends Component<IProps> {
                                 label="使用金额"
                                 rules={[{ required: true, message: '必须填写金额!' }]}
                             >
-                                <InputNumber min={1} max={campaign.targetMoney} />
+                                <InputNumber min={1} max={this.props.campaign.targetMoney} />
                             </Form.Item>
                             <Form.Item
                                 name="description"

@@ -23,7 +23,10 @@ class CardMyInvolved extends Component<IProps> {
     state = {
         isConnected: false,
         address: "",
-        tabInUse: 1
+        tabInUse: 1,
+        buttonDisable: false,
+        tagColor: "blue",
+        campaignState: "进行中"
     }
 
     async componentDidMount() {
@@ -38,6 +41,48 @@ class CardMyInvolved extends Component<IProps> {
                 isConnected: true,
                 address: accounts[0]
             })
+
+            let campaign = this.props.campaign;
+            if(campaign.state == 1 || campaign.overTime == true) {
+                this.setState({
+                    campaignState: "项目失败",
+                    tagColor:"red"
+                })
+            }
+            else if(campaign.state == 2) {
+                this.setState({
+                    campaignState: "项目完成",
+                    tagColor:"green"
+                })
+            }
+            else {
+                this.setState({
+                    campaignState: "进行中",
+                    tagColor:"blue"
+                })
+            }
+
+            this.isVotable(campaign)
+        }
+    }
+
+    async isVotable(campaign: any) {
+        // 如果项目已经结束或者还不能开始投票
+        if(campaign.state != 4) {
+            this.setState({
+                buttonDisable: true
+            })
+        }
+
+        // 该用户是否投过票
+        else {
+            let hasVoted = await contract.methods.checkIsVoted(campaign.index).call();
+            console.log(hasVoted)
+            if(hasVoted == true) {
+                this.setState({
+                    buttonDisable: true
+                })
+            }
         }
     }
 
@@ -100,47 +145,20 @@ class CardMyInvolved extends Component<IProps> {
     }
 
     render() {
-        let campaign = this.props.campaign;
-        let campaignState;
-        let tagColor;
-
-        if(campaign.state == 1 || campaign.overTime == true) {
-            campaignState = "Failed";
-            tagColor = "red";
-        }
-        else if(campaign.state == 2) {
-            campaignState = "Completed";
-            tagColor = "green";
-        }
-        else {
-            campaignState = "进行中";
-            tagColor = "blue";
-        }
-
-        let isVotable = () => {
-            // 如果项目已经结束或者还不能开始投票
-            if(campaignState != 4)
-                return false;
-
-            // 该用户是否投过票
-            let hasVoted = await contract.methods.checkIsVoted(i).call();
-            return !hasVoted;
-        }
-
         return (
             <div style={{boxShadow: "2px 2px 1px 2px #888", margin: "5px"}}>
                 <PageHeader
                     className="site-page-header-responsive"
-                    title={campaign.projectName}
-                    tags={<Tag color={tagColor}>{campaignState}</Tag>}
+                    title={this.props.campaign.projectName}
+                    tags={<Tag color={this.state.tagColor}>{this.state.campaignState}</Tag>}
                     extra={[
                         <div>
-                            <Button key="1" style={{marginRight:"10px"}} type="primary" disabled={!isVotable()} onClick={() => {
+                            <Button key="1" style={{marginRight:"10px"}} type="primary" disabled={this.state.buttonDisable} onClick={() => {
                                 this.vote(true)
                             }}>
                                 同意使用请求
                             </Button>
-                            <Button key="2" type="primary" danger disabled={!isVotable()} onClick={() => {
+                            <Button key="2" type="primary" danger disabled={this.state.buttonDisable} onClick={() => {
                                 this.vote(false)
                             }}>
                                 拒绝使用请求
@@ -150,7 +168,7 @@ class CardMyInvolved extends Component<IProps> {
                     footer={
                         <Tabs defaultActiveKey="1" onChange={this.onTabChange}>
                             <TabPane tab="募集" key="1" />
-                            <TabPane tab="使用" disabled={!(campaign.state == 2 || campaign.state == 4)} key="2" />
+                            <TabPane tab="使用" disabled={!(this.props.campaign.state == 2 || this.props.campaign.state == 4)} key="2" />
                         </Tabs>
                     }
                 >

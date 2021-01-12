@@ -51,7 +51,6 @@ class MyCampaignTab extends Component {
                 myCampaignsNum: num,
                 myUses: uses
             })
-            console.log(this.state.myCampaignsNum);
         }
     }
 

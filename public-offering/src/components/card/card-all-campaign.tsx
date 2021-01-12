@@ -27,7 +27,10 @@ class CardAllCampaign extends Component<IProps> {
         isConnected: false,
         address: "",
         tabInUse: 1,
-        modalVisible: false
+        modalVisible: false,
+        buttonDisable: false,
+        tagColor: "blue",
+        campaignState: "进行中"
     }
 
     async componentDidMount() {
@@ -42,6 +45,28 @@ class CardAllCampaign extends Component<IProps> {
                 isConnected: true,
                 address: accounts[0]
             })
+
+            let campaign = this.props.campaign;
+            if(campaign.state == 1 || campaign.overTime == true) {
+                this.setState({
+                    campaignState: "项目失败",
+                    tagColor:"red"
+                })
+            }
+            else if(campaign.state == 2) {
+                this.setState({
+                    campaignState: "项目完成",
+                    tagColor:"green"
+                })
+            }
+            else {
+                this.setState({
+                    campaignState: "进行中",
+                    tagColor:"blue"
+                })
+            }
+
+            this.canInvolvedIn(campaign);
         }
     }
 
@@ -104,46 +129,36 @@ class CardAllCampaign extends Component<IProps> {
         }
     }
 
-    render() {
-        let campaign = this.props.campaign;
-        let campaignState;
-        let tagColor;
-
-        if(campaign.state == 1 || campaign.overTime == true) {
-            campaignState = "Failed";
-            tagColor = "red";
-        }
-        else if(campaign.state == 2) {
-            campaignState = "Completed";
-            tagColor = "green";
+    async canInvolvedIn(campaign: any) {
+        console.log(campaign)
+        // 状态是否为募集中
+        // 是否超时
+        // 经理是否是自己
+        if(campaign.state != 0 || campaign.overTime == true || campaign.manager == this.state.address) {
+            this.setState({
+                buttonDisable: true
+            })
         }
         else {
-            campaignState = "进行中";
-            tagColor = "blue";
-        }
-
-        let canInvolvedIn = () => {
-            // 状态是否为募集中
-            if(campaign.state != 0) return false;
-            // 是否超时
-            if(campaign.overTime == true) return false;
-            // 经理是否是自己
-            if(campaign.manager == this.state.address) return false;
-
-            // 是否已经参与
-            let hasInvolved = await contract.methods.checkIsFunder(i).call();
+            let hasInvolved = await contract.methods.checkIsFunder(campaign.index).call();
             console.log(hasInvolved);
-            return !hasInvolved;
+            if(hasInvolved == true) {
+                this.setState({
+                    buttonDisable: true
+                })
+            }
         }
+    }
 
+    render() {
         return (
             <div style={{boxShadow: "2px 2px 1px 2px #888", margin: "5px"}}>
                 <PageHeader
                     className="site-page-header-responsive"
-                    title={campaign.projectName}
-                    tags={<Tag color={tagColor}>{campaignState}</Tag>}
+                    title={this.props.campaign.projectName}
+                    tags={<Tag color={this.state.tagColor}>{this.state.campaignState}</Tag>}
                     extra={[
-                        <Button key="1" type="primary" disabled={!canInvolvedIn()} onClick={() => {
+                        <Button key="1" type="primary" disabled={this.state.buttonDisable} onClick={() => {
                             this.setState({
                                 modalVisible: true
                             })
@@ -154,7 +169,7 @@ class CardAllCampaign extends Component<IProps> {
                     footer={
                         <Tabs defaultActiveKey="1" onChange={this.onTabChange}>
                             <TabPane tab="募集" key="1" />
-                            <TabPane tab="使用" disabled={!(campaign.state == 2 || campaign.state == 4)} key="2" />
+                            <TabPane tab="使用" disabled={!(this.props.campaign.state == 2 || this.props.campaign.state == 4)} key="2" />
                         </Tabs>
                     }
                 >
@@ -196,7 +211,7 @@ class CardAllCampaign extends Component<IProps> {
                             label="投入金额"
                             rules={[{ required: true, message: '必须填写金额!' }]}
                         >
-                            <InputNumber min={1} max={campaign.targetMoney - campaign.collectedMoney} />
+                            <InputNumber min={1} max={this.props.campaign.targetMoney - this.props.campaign.collectedMoney} />
                         </Form.Item>
                     </Form>
                 </Modal>
