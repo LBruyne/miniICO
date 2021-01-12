@@ -111,7 +111,7 @@ class CardMyCampaign extends Component<IProps> {
             <Descriptions.Item label="使用金额">
                 <a>{this.props.use.amount} ETH</a>
             </Descriptions.Item>
-            <Descriptions.Item label="同意者所持股份">{(this.props.use.agreeAmount / this.props.campaign.targetMoney).toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="同意者所持股份">{(this.props.use.agreeAmount / this.props.campaign.targetMoney).toFixed(2) * 100} %</Descriptions.Item>
             <Descriptions.Item label="同意人数">{this.props.use.numVote}</Descriptions.Item>
             <Descriptions.Item label="使用描述">
                 {this.props.use.useDescription}

@@ -98,7 +98,7 @@ class CardAllCampaign extends Component<IProps> {
             <Descriptions.Item label="使用金额">
                 <a>{this.props.use.amount} ETH</a>
             </Descriptions.Item>
-            <Descriptions.Item label="同意者所持股份">{(this.props.use.agreeAmount / this.props.campaign.targetMoney).toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="同意者所持股份">{(this.props.use.agreeAmount / this.props.campaign.targetMoney).toFixed(2) * 100} %</Descriptions.Item>
             <Descriptions.Item label="同意人数">{this.props.use.numVote}</Descriptions.Item>
             <Descriptions.Item label="使用描述">
                 {this.props.use.useDescription}
@@ -139,9 +139,16 @@ class CardAllCampaign extends Component<IProps> {
                 buttonDisable: true
             })
         }
+        // 是否已经参与了该项目
         else {
-            let hasInvolved = await contract.methods.checkIsFunder(campaign.index).call();
-            console.log(hasInvolved);
+            let hasInvolved = false;
+            let ret = await contract.methods.getInvestors(campaign.index).call()
+            for(let i = 0; i < ret.length; i++) {
+                if(ret[i] == this.state.address) {
+                    hasInvolved = true;
+                    break;
+                }
+            }
             if(hasInvolved == true) {
                 this.setState({
                     buttonDisable: true

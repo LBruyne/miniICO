@@ -39,7 +39,7 @@ contract Funding {
                                              * 4：发起了使用请求，正在接受请求
                                              */
 
-        address[] funders;                  // 参与成员的地址
+        address payable[] funders;                  // 参与成员的地址
         uint[]    amount;                   // 参与者贡献的金额
     }
 
@@ -53,7 +53,7 @@ contract Funding {
         // campaignID 作为一个变量返回
         uint campaignID = numCampaigns++;
 
-        address[] memory funders;
+        address payable[] memory funders;
         uint[] memory amount;
         Campaign memory c = Campaign({
         projectName: name,
@@ -99,6 +99,7 @@ contract Funding {
         u.agree.push(0);    // 初始为没投票过
         // 投资者数量增加
         c.funders.push(msg.sender);
+        c.numFunders++;
         c.amount.push(msg.value);
         // 已收集的资金增加
         c.collectedMoney += msg.value;
@@ -137,6 +138,7 @@ contract Funding {
                 require(u.agree[i] == 0);
 
                 if(u.agree[i] == 0) {
+                    u.numVote++;
                     // 用户同意
                     if(agree == true) {
                         u.agree[i] = 1;
@@ -156,58 +158,32 @@ contract Funding {
                     }
                     if(u.disagreeAmount >= c.collectedMoney / 2) {
                         c.state = 1;
+                        // 使用失败，退钱
+                        refund(campaignID);
                     }
                 }
             }
         }
     }
 
-    // 检查一个用户是否在一个项目的支持者名单中
-    function checkIsFunder(uint campaignID) public view returns (bool) {
+    // 返回该项目所有参与者
+    function getInvestors(uint campaignID) public view returns(address payable[] memory) {
         Campaign storage c = campaigns[campaignID];
-        bool ret = false;
-        for(uint i = 0; i < c.numFunders; i++) {
-            if(c.funders[i] == msg.sender) {
-                ret = true;
-                break;
-            }
-        }
-        return ret;
-    }
-
-    // 检查一个用户是否对一个项目投票
-    function checkIsVoted(uint campaignID) public view returns (bool) {
-        Use storage u = uses[campaignID];
-        Campaign storage c = campaigns[campaignID];
-        bool ret = false;
-        for(uint i = 0; i < c.numFunders; i++) {
-            if(c.funders[i] == msg.sender) {
-                if(u.agree[i] != 0) {
-                    ret = true;
-                    break;
-                }
-            }
-        }
-        return ret;
-    }
-
-    /*
-    function getInvestors(uint campaignID) public returns(address[] memory) {
-        Campaign storage c = campaigns[campaignID];
-        address[] storage funders;
-        for(uint i = 0; i < c.numFunders; i++) {
-            funders[i] = c.funders[i].addr;
-        }
+        address payable[] storage funders = c.funders;
         return funders;
     }
-    */
 
-    /* 退款
+    // 返回该项目所有投票
+    function getVotes(uint campaignID) public view returns(uint[] memory) {
+        Use storage u = uses[campaignID];
+        uint[] storage agrees = u.agree;
+        return agrees;
+    }
+
     function refund(uint campaignID) public {
-        Campaign c = campaigns[campaignID];
+        Campaign storage c = campaigns[campaignID];
         for (uint i = 0; i < c.numFunders; i++) {
-            c.funders[i].transfer(c.funders[i].amount);
+            c.funders[i].transfer(c.amount[i]);
         }
     }
-    */
 }

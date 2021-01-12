@@ -76,8 +76,21 @@ class CardMyInvolved extends Component<IProps> {
 
         // 该用户是否投过票
         else {
-            let hasVoted = await contract.methods.checkIsVoted(campaign.index).call();
-            console.log(hasVoted)
+            let hasVoted = false;
+            let index = 0;
+            let retFunders = await contract.methods.getInvestors(campaign.index).call()
+            let retVoters = await contract.methods.getVotes(campaign.index).call()
+            // 先找到该用户在所有用户中的序号
+            for(let i = 0; i < retFunders.length; i++) {
+                if(retFunders[i] == this.state.address) {
+                    index = i;
+                    break;
+                }
+            }
+            // 用户和投票权一一对应，所以这个序号也是该用户投票权的索引
+            if(retVoters[index] != 0) {
+                hasVoted = true;
+            }
             if(hasVoted == true) {
                 this.setState({
                     buttonDisable: true
@@ -114,7 +127,7 @@ class CardMyInvolved extends Component<IProps> {
             <Descriptions.Item label="使用金额">
                 <a>{this.props.use.amount} ETH</a>
             </Descriptions.Item>
-            <Descriptions.Item label="同意者所持股份">{(this.props.use.agreeAmount / this.props.campaign.targetMoney).toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="同意者所持股份">{(this.props.use.agreeAmount / this.props.campaign.targetMoney).toFixed(2) * 100} %</Descriptions.Item>
             <Descriptions.Item label="同意人数">{this.props.use.numVote}</Descriptions.Item>
             <Descriptions.Item label="使用描述">
                 {this.props.use.useDescription}

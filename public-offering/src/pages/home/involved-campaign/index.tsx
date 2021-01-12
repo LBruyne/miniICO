@@ -39,10 +39,15 @@ class InvolvedCampaignTab extends Component {
                 console.log(use)
 
                 // 查看该用户是否参与了当前项目
-                const involved = await contract.methods.checkIsFunder(i).call();
-                console.log(involved);
-
-                if(involved == true) {
+                let hasInvolved = false;
+                let ret = await contract.methods.getInvestors(campaign.index).call()
+                for(let i = 0; i < ret.length; i++) {
+                    if(ret[i] == this.state.address) {
+                        hasInvolved = true;
+                        break;
+                    }
+                }
+                if(hasInvolved == true) {
                     uses.push(use);
                     campaigns.push(campaign);
                 }
