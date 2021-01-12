@@ -215,7 +215,7 @@ class CardAllCampaign extends Component<IProps> {
                     >
                         <Form.Item
                             name="amount"
-                            label="投入金额"
+                            label="投入金额（ETH）"
                             rules={[{ required: true, message: '必须填写金额!' }]}
                         >
                             <InputNumber min={1} max={this.props.campaign.targetMoney - this.props.campaign.collectedMoney} />

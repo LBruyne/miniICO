@@ -122,14 +122,14 @@ class HomePage extends Component {
                         </Form.Item>
                         <Form.Item
                             name="targetMoney"
-                            label="筹集金额"
+                            label="筹集金额（ETH）"
                             rules={[{ required: true, message: '必须填写金额!' }]}
                         >
                             <InputNumber min={1} max={200} />
                         </Form.Item>
                         <Form.Item
                             name="durTime"
-                            label="持续时间"
+                            label="持续时间（天）"
                             rules={[{ required: true, message: '必须填写时间!' }]}
                         >
                             <InputNumber min={1} max={100} />
