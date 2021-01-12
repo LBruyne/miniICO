@@ -101,35 +101,30 @@ class CardMyInvolved extends Component<IProps> {
 
     render() {
         let campaign = this.props.campaign;
-        let isRunning = "Ended";
-        let tagColor = "red";
-        let isVoteDisable = () => {
-            // 如果项目已经结束或者还不能开始投票
-            if(this.props.campaign.isSuccessful == false || this.props.use.amount == 0 || campaign.isValid == false)
-                return true;
+        let campaignState;
+        let tagColor;
 
-            let uid = 0;
-            // 查找当前用户在该项目中的uid
-            /* TODO
-            for (let i = 0; i < this.props.campaign.numFunders; i++) {
-                if (this.props.campaign.funders[i].addr == this.state.address) {
-                    uid = i;
-                    break;
-                }
-            }
-            */
-            // 该用户没投过票
-            if (this.props.use.agree[uid] == 0) return false;
-            return true;
+        if(campaign.state == 1 || campaign.overTime == true) {
+            campaignState = "Failed";
+            tagColor = "red";
         }
-
-        let hasUsed = () => {
-            if(this.props.use.amount == 0) return false;
-            else return true;
+        else if(campaign.state == 2) {
+            campaignState = "Completed";
+            tagColor = "green";
         }
-        if(campaign.isValid == true) {
-            isRunning = "Running";
+        else {
+            campaignState = "进行中";
             tagColor = "blue";
+        }
+
+        let isVotable = () => {
+            // 如果项目已经结束或者还不能开始投票
+            if(campaignState != 4)
+                return false;
+
+            // 该用户是否投过票
+            let hasVoted = await contract.methods.checkIsVoted(i).call();
+            return !hasVoted;
         }
 
         return (
@@ -137,15 +132,15 @@ class CardMyInvolved extends Component<IProps> {
                 <PageHeader
                     className="site-page-header-responsive"
                     title={campaign.projectName}
-                    tags={<Tag color={tagColor}>{isRunning}</Tag>}
+                    tags={<Tag color={tagColor}>{campaignState}</Tag>}
                     extra={[
                         <div>
-                            <Button key="1" style={{marginRight:"10px"}} type="primary" disabled={voteDisable = isVoteDisable()} onClick={() => {
+                            <Button key="1" style={{marginRight:"10px"}} type="primary" disabled={!isVotable()} onClick={() => {
                                 this.vote(true)
                             }}>
                                 同意使用请求
                             </Button>
-                            <Button key="2" type="primary" danger disabled={voteDisable = isVoteDisable()} onClick={() => {
+                            <Button key="2" type="primary" danger disabled={!isVotable()} onClick={() => {
                                 this.vote(false)
                             }}>
                                 拒绝使用请求
@@ -155,7 +150,7 @@ class CardMyInvolved extends Component<IProps> {
                     footer={
                         <Tabs defaultActiveKey="1" onChange={this.onTabChange}>
                             <TabPane tab="募集" key="1" />
-                            <TabPane tab="使用" disabled={this.props.use.amount=="0"} key="2" />
+                            <TabPane tab="使用" disabled={!(campaign.state == 2 || campaign.state == 4)} key="2" />
                         </Tabs>
                     }
                 >

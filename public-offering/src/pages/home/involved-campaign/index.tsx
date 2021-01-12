@@ -39,17 +39,10 @@ class InvolvedCampaignTab extends Component {
                 console.log(use)
 
                 // 查看该用户是否参与了当前项目
-                let isInvolved = false;
-                /* TODO
-                for (let i = 0; i < campaign.numFunders; i++) {
-                    if (campaign.funders[i].addr == this.state.address) {
-                        isInvolved = true;
-                        break;
-                    }
-                }
-                */
-                // @ts-ignore
-                if(isInvolved == true) {
+                const involved = await contract.methods.checkIsFunder(i).call();
+                console.log(involved);
+
+                if(involved == true) {
                     uses.push(use);
                     campaigns.push(campaign);
                 }
@@ -62,13 +55,13 @@ class InvolvedCampaignTab extends Component {
     }
 
     private formatCampaign(data: any, index: number) {
-        // 判断当前项目是否有效
+        // 判断当前项目是否超时
         let curTime = new Date().getTime() / 1000;  // 当前的时间，距1970年的秒数
-        if(data.endTime > curTime && data.isSuccessful == false && data.isUsed == false) {
-            data.isValid = true;
+        if(data.endTime > curTime) {
+            data.overTime = false;
         }
         else {
-            data.isValid = false;
+            data.overTime = true;
         }
 
         data.index = index;
@@ -82,6 +75,7 @@ class InvolvedCampaignTab extends Component {
         data.index = index;
         data.amount = web3.utils.fromWei(data.amount, 'ether')
         data.agreeAmount = web3.utils.fromWei(data.agreeAmount, 'ether')
+        data.disagreeAmount = web3.utils.fromWei(data.disagreeAmount, 'ether')
     }
 
     private formatTime(time: string) {

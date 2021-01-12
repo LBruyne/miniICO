@@ -106,19 +106,28 @@ class CardMyCampaign extends Component<IProps> {
 
     render() {
         let campaign = this.props.campaign;
-        let isRunning = "Ended";
-        let tagColor = "red";
-        let canUse = () => {
-            // 没设置过
-            if(this.props.use.amount != 0) return false;
-            if(this.props.campaign.isSuccessful == false) return false;
-            if(this.props.campaign.isUsed == true) return false;
-            if(this.props.use.isSuccessful == true) return false;
-            return true;
+        let campaignState;
+        let tagColor;
+
+        if(campaign.state == 1 || campaign.overTime == true) {
+            campaignState = "Failed";
+            tagColor = "red";
         }
-        if(campaign.isValid == true) {
-            isRunning = "Running";
+        else if(campaign.state == 2) {
+            campaignState = "Completed";
+            tagColor = "green";
+        }
+        else {
+            campaignState = "进行中";
             tagColor = "blue";
+        }
+
+        let canUse = () => {
+            // 没设置用途过
+            if(campaign.state == 3)
+                return true;
+            else
+                return false;
         }
 
         return (
@@ -126,9 +135,9 @@ class CardMyCampaign extends Component<IProps> {
                     <PageHeader
                         className="site-page-header-responsive"
                         title={campaign.projectName}
-                        tags={<Tag color={tagColor}>{isRunning}</Tag>}
+                        tags={<Tag color={tagColor}>{campaignState}</Tag>}
                         extra={[
-                            <Button key="1" type="primary" disabled={false} onClick={() =>
+                            <Button key="1" type="primary" disabled={!canUse()} onClick={() =>
                                 this.setState({
                                     modalVisible: true
                                 })
@@ -139,7 +148,7 @@ class CardMyCampaign extends Component<IProps> {
                         footer={
                             <Tabs defaultActiveKey="1" onChange={this.onTabChange}>
                                 <TabPane tab="募集" key="1" />
-                                <TabPane tab="使用" disabled={this.props.use.amount=="0"} key="2" />
+                                <TabPane tab="使用" disabled={!(campaign.state == 2 || campaign.state == 4)} key="2" />
                             </Tabs>
                         }
                     >

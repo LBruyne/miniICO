@@ -106,31 +106,34 @@ class CardAllCampaign extends Component<IProps> {
 
     render() {
         let campaign = this.props.campaign;
-        let isRunning = "Ended";
-        let tagColor = "red";
-        let hasUsed = () => {
-            if(this.props.use.amount == 0) return false;
-            else return true;
+        let campaignState;
+        let tagColor;
+
+        if(campaign.state == 1 || campaign.overTime == true) {
+            campaignState = "Failed";
+            tagColor = "red";
         }
-        if(campaign.isValid == true) {
-            isRunning = "Running";
+        else if(campaign.state == 2) {
+            campaignState = "Completed";
+            tagColor = "green";
+        }
+        else {
+            campaignState = "进行中";
             tagColor = "blue";
         }
+
         let canInvolvedIn = () => {
-            if(campaign.isValid == false) return false;
-            let canInvolved = true;
+            // 状态是否为募集中
+            if(campaign.state != 0) return false;
+            // 是否超时
+            if(campaign.overTime == true) return false;
             // 经理是否是自己
             if(campaign.manager == this.state.address) return false;
+
             // 是否已经参与
-            for(let i = 0; i < campaign.numFunders; i++) {
-                console.log("我的", campaign)
-                /* TODO
-                if(campaign.funders[i].addr == this.state.address) {
-                    canInvolved = false;
-                    break;
-                }*/
-            }
-            return canInvolved;
+            let hasInvolved = await contract.methods.checkIsFunder(i).call();
+            console.log(hasInvolved);
+            return !hasInvolved;
         }
 
         return (
@@ -138,7 +141,7 @@ class CardAllCampaign extends Component<IProps> {
                 <PageHeader
                     className="site-page-header-responsive"
                     title={campaign.projectName}
-                    tags={<Tag color={tagColor}>{isRunning}</Tag>}
+                    tags={<Tag color={tagColor}>{campaignState}</Tag>}
                     extra={[
                         <Button key="1" type="primary" disabled={!canInvolvedIn()} onClick={() => {
                             this.setState({
@@ -151,7 +154,7 @@ class CardAllCampaign extends Component<IProps> {
                     footer={
                         <Tabs defaultActiveKey="1" onChange={this.onTabChange}>
                             <TabPane tab="募集" key="1" />
-                            <TabPane tab="使用" disabled={this.props.use.amount=="0"} key="2" />
+                            <TabPane tab="使用" disabled={!(campaign.state == 2 || campaign.state == 4)} key="2" />
                         </Tabs>
                     }
                 >
